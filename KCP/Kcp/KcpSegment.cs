@@ -591,7 +591,7 @@ namespace System.Net.Sockets.Kcp
 #endif
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// https://github.com/skywind3000/kcp/issues/35#issuecomment-263770736
         public Span<byte> data
@@ -616,7 +616,7 @@ namespace System.Net.Sockets.Kcp
                     break;
                 case 2:
                     var buffer2 = data;
-                    byteCheckCode = (uint)XxHash64.HashToUInt64(buffer2);
+                    byteCheckCode = (uint)XxHash3.HashToUInt64(buffer2);
                     break;
                 default:
                     byteCheckCode = 0;

@@ -298,7 +298,7 @@ namespace System.Net.Sockets.Kcp
         protected readonly object rcv_queueLock = new object();
 
         /// <summary>
-        /// 发送 ack 队列 
+        /// 发送 ack 队列
         /// </summary>
         protected ConcurrentQueue<(uint sn, uint ts)> acklist = new ConcurrentQueue<(uint sn, uint ts)>();
         /// <summary>
@@ -1257,7 +1257,7 @@ namespace System.Net.Sockets.Kcp
         }
 
         protected virtual void OnDeadlink()
-        { 
+        {
 
         }
 
@@ -1629,7 +1629,7 @@ namespace System.Net.Sockets.Kcp
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="interval_"></param>
         /// <returns></returns>
@@ -1707,7 +1707,7 @@ namespace System.Net.Sockets.Kcp
                 default:
                     return -1;
             }
-            
+
             this.byteCheckMode = byteCheckMode;
             this.corrupt = corrupt;
 
@@ -1751,7 +1751,7 @@ namespace System.Net.Sockets.Kcp
 
             #region append to previous segment in streaming mode (if possible)
             /// 基于线程安全和数据结构的等原因,移除了追加数据到最后一个包行为。
-            
+
             /// C语言版本snd_queue使用双向链表，可以修改最后一个包。
             /// C#当前snd_queue使用ConcurrentQueue，无法修改最后一个包。所以无法实现流模式。
             #endregion
@@ -2528,15 +2528,15 @@ namespace System.Net.Sockets.Kcp
                     newByteCheckCode = Crc32.HashToUInt32(data);
                     break;
                 case 2:
-                    newByteCheckCode = (uint)XxHash64.HashToUInt64(data);
+                    newByteCheckCode = (uint)XxHash3.HashToUInt64(data);
                     break;
                 default:
-                    newByteCheckCode = 0;
+                    newByteCheckCode = byteCheckMode;
                     break;
             }
             return byteCheckCode == newByteCheckCode;
         }
-        
+
         public static bool byteCheck(ReadOnlySequence<byte> data, uint byteCheckMode, uint byteCheckCode)
         {
             uint newByteCheckCode;
@@ -2551,15 +2551,15 @@ namespace System.Net.Sockets.Kcp
                     newByteCheckCode = crc.GetCurrentHashAsUInt32();
                     break;
                 case 2:
-                    var xxhash64 = new XxHash64();
+                    var xxhash3_64 = new XxHash3();
                     foreach (var mem in data)
                     {
-                        xxhash64.Append(mem.Span);
+                        xxhash3_64.Append(mem.Span);
                     }
-                    newByteCheckCode = (uint)xxhash64.GetCurrentHashAsUInt64();
+                    newByteCheckCode = (uint)xxhash3_64.GetCurrentHashAsUInt64();
                     break;
                 default:
-                    newByteCheckCode = 0;
+                    newByteCheckCode = byteCheckCode;
                     break;
             }
             return byteCheckCode == newByteCheckCode;
