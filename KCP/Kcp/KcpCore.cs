@@ -2477,7 +2477,7 @@ namespace System.Net.Sockets.Kcp
                     newByteCheckCode = (uint)XxHash3.HashToUInt64(data);
                     break;
                 default:
-                    newByteCheckCode = byteCheckMode;
+                    newByteCheckCode = byteCheckCode;
                     break;
             }
             return byteCheckCode == newByteCheckCode;
