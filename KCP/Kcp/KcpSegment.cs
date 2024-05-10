@@ -25,9 +25,6 @@ namespace System.Net.Sockets.Kcp
         }
 #endif
 
-#if BUGFIX_TRIAL_20230611_001
-        private static object marshal_lck = new object();
-#endif
         internal readonly unsafe byte* ptr;
         public unsafe KcpSegment(byte* intPtr, uint appendDateSize)
         {
@@ -43,15 +40,8 @@ namespace System.Net.Sockets.Kcp
         public static KcpSegment AllocHGlobal(int appendDateSize)
         {
             var total = LocalOffset + HeadOffset + appendDateSize;
-#if BUGFIX_TRIAL_20230611_001
-            IntPtr intPtr;
-            lock (marshal_lck)
-            {
-                intPtr = Marshal.AllocHGlobal(total);
-            }
-#else
+
             IntPtr intPtr = Marshal.AllocHGlobal(total);
-#endif
 #if false
             Log.Verb($"KcpSegment memory alloc: 0x{intPtr:x}", nameof(KcpSegment));
 #endif
@@ -73,14 +63,7 @@ namespace System.Net.Sockets.Kcp
         {
             unsafe
             {
-#if BUGFIX_TRIAL_20230611_001
-                lock (marshal_lck)
-                {
-#endif
-                    Marshal.FreeHGlobal((IntPtr)seg.ptr);
-#if BUGFIX_TRIAL_20230611_001
-                }
-#endif
+                Marshal.FreeHGlobal((IntPtr)seg.ptr);
 #if false
                 Log.Verb($"KcpSegment memory free: 0x{(IntPtr)seg.ptr:x}", nameof(KcpSegment));
 #endif

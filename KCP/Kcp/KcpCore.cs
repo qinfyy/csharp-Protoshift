@@ -641,10 +641,8 @@ namespace System.Net.Sockets.Kcp
         /// </summary>
         protected void Move_Rcv_buf_2_Rcv_queue()
         {
-#if !BUGFIX_TRIAL_20230610_001
             lock (rcv_bufLock)
             {
-#endif
                 while (rcv_buf.Count > 0)
                 {
                     var seg = rcv_buf.First.Value;
@@ -669,9 +667,7 @@ namespace System.Net.Sockets.Kcp
                         break;
                     }
                 }
-#if !BUGFIX_TRIAL_20230610_001
             }
-#endif
         }
 
         /// <summary>
@@ -710,14 +706,10 @@ namespace System.Net.Sockets.Kcp
 
         protected void Shrink_buf()
         {
-#if !BUGFIX_TRIAL_20230609_001
             lock (snd_bufLock)
             {
-#endif
                 snd_una = snd_buf.Count > 0 ? snd_buf.First.Value.sn : snd_nxt;
-#if !BUGFIX_TRIAL_20230609_001
             }
-#endif
         }
 
         protected void Parse_ack(uint sn)
@@ -750,10 +742,8 @@ namespace System.Net.Sockets.Kcp
         protected void Parse_una(uint una)
         {
             /// 删除给定时间之前的片段。保留之后的片段
-#if !BUGFIX_TRIAL_20230609_001
             lock (snd_bufLock)
             {
-#endif
                 while (snd_buf.First != null)
                 {
                     var seg = snd_buf.First.Value;
@@ -767,9 +757,7 @@ namespace System.Net.Sockets.Kcp
                         break;
                     }
                 }
-#if !BUGFIX_TRIAL_20230609_001
             }
-#endif
 
         }
 
@@ -868,14 +856,9 @@ namespace System.Net.Sockets.Kcp
                 {
                     SegmentManager.Free(newseg);
                 }
-#if !BUGFIX_TRIAL_20230610_001
             }
-#endif
 
-                Move_Rcv_buf_2_Rcv_queue();
-#if BUGFIX_TRIAL_20230610_001
-            }
-#endif
+            Move_Rcv_buf_2_Rcv_queue();
         }
 
         protected ushort Wnd_unused()
@@ -1050,47 +1033,40 @@ namespace System.Net.Sockets.Kcp
                 cwnd_ = Min(cwnd, cwnd_);
             }
 
-#if BUGFIX_TRIAL_20230610_002
-            lock (snd_queueLock)
+            while (Itimediff(snd_nxt, snd_una + cwnd_) < 0)
             {
-#endif
-                while (Itimediff(snd_nxt, snd_una + cwnd_) < 0)
+                if (snd_queue.TryDequeue(out var newseg))
                 {
-                    if (snd_queue.TryDequeue(out var newseg))
-                    {
-                        newseg.conv = conv;
+                    newseg.conv = conv;
 #if MIHOMO_KCP
-                        // miHoMo KCP modify: IUINT32 token
-                        // Change line(s) in file compare: ikcp.c, +1040
-                        newseg.token = token;
+                    // miHoMo KCP modify: IUINT32 token
+                    // Change line(s) in file compare: ikcp.c, +1040
+                    newseg.token = token;
 #endif
 
-                        newseg.cmd = IKCP_CMD_PUSH;
-                        newseg.wnd = wnd_;
-                        newseg.ts = current_;
-                        newseg.sn = snd_nxt;
-                        snd_nxt++;
-                        newseg.una = rcv_nxt;
-                        newseg.resendts = current_;
-                        newseg.rto = rx_rto;
-                        newseg.fastack = 0;
-                        newseg.xmit = 0;
+                    newseg.cmd = IKCP_CMD_PUSH;
+                    newseg.wnd = wnd_;
+                    newseg.ts = current_;
+                    newseg.sn = snd_nxt;
+                    snd_nxt++;
+                    newseg.una = rcv_nxt;
+                    newseg.resendts = current_;
+                    newseg.rto = rx_rto;
+                    newseg.fastack = 0;
+                    newseg.xmit = 0;
 #if BYTE_CHECK_MODE
                         newseg.byteCheckMode = byteCheckMode;
 #endif
-                        lock (snd_bufLock)
-                        {
-                            snd_buf.AddLast(newseg);
-                        }
-                    }
-                    else
+                    lock (snd_bufLock)
                     {
-                        break;
+                        snd_buf.AddLast(newseg);
                     }
                 }
-#if BUGFIX_TRIAL_20230610_002
+                else
+                {
+                    break;
+                }
             }
-#endif
             #endregion
 
             #region 刷新 发送列表，调用Output
@@ -1700,9 +1676,7 @@ namespace System.Net.Sockets.Kcp
             {
                 case 1:
                 case 2:
-                    break;
                 case 0:
-                    byteCheckMode = 0;
                     break;
                 default:
                     return -1;
@@ -1989,31 +1963,17 @@ namespace System.Net.Sockets.Kcp
                 }
 
                 rmt_wnd = wnd;
-#if BUGFIX_TRIAL_20230609_001
-                lock (snd_bufLock)
-                {
-#endif
-                    Parse_una(una);
-                    Shrink_buf();
-#if BUGFIX_TRIAL_20230609_001
-                }
-#endif
+                Parse_una(una);
+                Shrink_buf();
                 if (IKCP_CMD_ACK == cmd)
                 {
                     if (Itimediff(current, ts) >= 0)
                     {
                         Update_ack(Itimediff(current, ts));
                     }
-#if BUGFIX_TRIAL_20230609_001
-                    lock (snd_bufLock)
-                    {
-#endif
-                        Parse_ack(sn);
-                        Shrink_buf();
+                    Parse_ack(sn);
+                    Shrink_buf();
 
-#if BUGFIX_TRIAL_20230609_001
-                    }
-#endif
                     if (flag == 0)
                     {
                         flag = 1;
@@ -2262,15 +2222,8 @@ namespace System.Net.Sockets.Kcp
                 }
 
                 rmt_wnd = wnd;
-#if BUGFIX_TRIAL_20230609_001
-                lock (snd_bufLock)
-                {
-#endif
-                    Parse_una(una);
-                    Shrink_buf();
-#if BUGFIX_TRIAL_20230609_001
-                }
-#endif
+                Parse_una(una);
+                Shrink_buf();
 
                 if (IKCP_CMD_ACK == cmd)
                 {
@@ -2278,15 +2231,8 @@ namespace System.Net.Sockets.Kcp
                     {
                         Update_ack(Itimediff(current, ts));
                     }
-#if BUGFIX_TRIAL_20230609_001
-                    lock (snd_bufLock)
-                    {
-#endif
-                        Parse_ack(sn);
-                        Shrink_buf();
-#if BUGFIX_TRIAL_20230609_001
-                    }
-#endif
+                    Parse_ack(sn);
+                    Shrink_buf();
 
                     if (flag == 0)
                     {

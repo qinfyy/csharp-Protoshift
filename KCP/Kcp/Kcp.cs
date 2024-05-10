@@ -299,14 +299,7 @@ namespace System.Net.Sockets.Kcp
 
             #endregion
 
-#if BUGFIX_TRIAL_20230610_001
-            lock (rcv_bufLock)
-            { 
-#endif
-                Move_Rcv_buf_2_Rcv_queue();
-#if BUGFIX_TRIAL_20230610_001
-            }
-#endif
+            Move_Rcv_buf_2_Rcv_queue();
 
             #region fast recover
             /// fast recover
@@ -377,14 +370,7 @@ namespace System.Net.Sockets.Kcp
 
             #endregion
 
-#if BUGFIX_TRIAL_20230610_001
-            lock (rcv_bufLock)
-            {
-#endif
-                Move_Rcv_buf_2_Rcv_queue();
-#if BUGFIX_TRIAL_20230610_001
-            }
-#endif
+            Move_Rcv_buf_2_Rcv_queue();
 
             #region fast recover
             /// fast recover

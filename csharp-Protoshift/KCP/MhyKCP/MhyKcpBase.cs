@@ -86,7 +86,7 @@ namespace csharp_Protoshift.MhyKCP
 #else
             bool corrupt = false;
 #endif
-            cskcpHandle.SetByteCheck(1, corrupt);
+            cskcpHandle.SetByteCheck(2, corrupt);
 #endif
 
             // Added
